@@ -1,7 +1,7 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
 import ThemeRegistry from "../src/theme/ThemeRegistry";
-import MainLayout from "../src/components/layout/MainLayout";
+import ConditionalLayout from "../src/components/layout/ConditionalLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +16,7 @@ export default function RootLayout({ children }) {
     <html lang='es'>
       <body className={inter.className}>
         <ThemeRegistry>
-          <MainLayout>{children}</MainLayout>
+          <ConditionalLayout>{children}</ConditionalLayout>
         </ThemeRegistry>
       </body>
     </html>

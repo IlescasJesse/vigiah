@@ -3,6 +3,7 @@
 import * as React from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Drawer,
   List,
@@ -21,7 +22,6 @@ import {
   CalendarToday as CalendarIcon,
   Calculate as CalculateIcon,
   Settings as SettingsIcon,
-  LocalHospital as HospitalIcon,
 } from "@mui/icons-material";
 
 const DRAWER_WIDTH = 280;
@@ -55,42 +55,29 @@ export default function Sidebar() {
       {/* Logo Area */}
       <Box
         sx={{
-          p: 3,
           display: "flex",
           alignItems: "center",
-          gap: 1.5,
+          justifyContent: "center",
           borderBottom: "1px solid",
           borderColor: "divider",
+          height: 70,
+          px: 3,
         }}
       >
-        <HospitalIcon
+        <Box
           sx={{
-            fontSize: 40,
-            color: "primary.main",
+            position: "relative",
+            width: 200,
+            height: 54,
           }}
-        />
-        <Box>
-          <Typography
-            variant='h5'
-            sx={{
-              fontWeight: 700,
-              color: "primary.main",
-              letterSpacing: "-0.5px",
-            }}
-          >
-            VIGIAH
-          </Typography>
-          <Typography
-            variant='caption'
-            sx={{
-              color: "text.secondary",
-              fontWeight: 500,
-              display: "block",
-              lineHeight: 1.2,
-            }}
-          >
-            Sistema de Seguimiento
-          </Typography>
+        >
+          <Image
+            src='/img/isotipo.jpg'
+            alt='VIGIAH Isotipo'
+            fill
+            style={{ objectFit: "contain" }}
+            priority
+          />
         </Box>
       </Box>
 

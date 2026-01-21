@@ -10,9 +10,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "db:create": "node scripts/createDatabase.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "seed": "node scripts/seedData.js",
+    "setup": "npm run db:create && npm run prisma:migrate -- --name init && npm run seed",
     "risk:examples": "node lib/riskCalculatorExamples.js"
   },
   "dependencies": {
@@ -24,7 +26,9 @@
     "@prisma/client": "^5.7.0",
     "bcryptjs": "^2.4.3",
     "date-fns": "^3.0.0",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.0.0",
+    "mysql2": "^3.16.1",
     "next": "^14.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

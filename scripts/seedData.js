@@ -3,6 +3,28 @@
  * Ejecutar con: node scripts/seedData.js
  */
 
+// Cargar variables de entorno manualmente para ES modules
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+try {
+  const envFile = readFileSync(join(__dirname, "..", ".env"), "utf8");
+  envFile.split("\n").forEach((line) => {
+    const match = line.match(/^([^#=]+)=(.*)$/);
+    if (match) {
+      const key = match[1].trim();
+      const value = match[2].trim().replace(/^["']|["']$/g, "");
+      process.env[key] = value;
+    }
+  });
+} catch (error) {
+  console.error("Error cargando .env:", error.message);
+}
+
 import connectDB from "../lib/db.js";
 import Patient from "../models/Patient.js";
 import prisma from "../lib/prisma.js";
@@ -232,8 +254,8 @@ const seedPatients = [
 
 const seedUsers = [
   {
-    email: "admin@vigiah.com",
-    name: "Dr. Ivan Ilescas Martinez Urgenciologo",
+    email: "ivan@vigiah.com",
+    name: "Dr. Ivan Ilescas Martinez",
     password: "ILESCAS3010!",
     role: "ADMIN",
   },

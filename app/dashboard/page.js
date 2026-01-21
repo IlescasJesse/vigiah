@@ -82,24 +82,31 @@ function KPICard({
             mb: 2,
           }}
         >
-          <Box>
+          <Box sx={{ flex: 1 }}>
             <Typography variant='body2' color='text.secondary' gutterBottom>
               {title}
             </Typography>
-            <Typography variant='h3' sx={{ fontWeight: 700, mb: 0.5 }}>
-              {value}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "baseline",
+                gap: 0.5,
+                mb: 0.5,
+              }}
+            >
+              <Typography variant='h3' sx={{ fontWeight: 700 }}>
+                {value}
+              </Typography>
               {suffix && (
-                <Typography
-                  component='span'
-                  variant='h5'
-                  sx={{ color: "text.secondary", ml: 0.5 }}
-                >
+                <Typography variant='h5' sx={{ color: "text.secondary" }}>
                   {suffix}
                 </Typography>
               )}
-            </Typography>
+            </Box>
             {trend && trendValue && (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 1 }}
+              >
                 {trend === "up" ? (
                   <TrendingUpIcon
                     sx={{ fontSize: 20, color: getStatusColor() }}
@@ -166,32 +173,26 @@ function UrgentPatientItem({ patient }) {
       <Avatar sx={{ bgcolor: `${getRiskColor()}.light`, mr: 2 }}>
         <WarningIcon sx={{ color: `${getRiskColor()}.main` }} />
       </Avatar>
-      <ListItemText
-        primary={
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-            <Typography variant='body1' sx={{ fontWeight: 600 }}>
-              {patient.name}
-            </Typography>
-            <Chip
-              label={`${patient.daysLate} días`}
-              size='small'
-              color={getRiskColor()}
-              sx={{ height: 20, fontSize: "0.75rem", fontWeight: 600 }}
-            />
-          </Box>
-        }
-        secondary={
-          <Box>
-            <Typography variant='body2' color='text.secondary'>
-              Último control:{" "}
-              {new Date(patient.lastAppointment).toLocaleDateString("es-ES")}
-            </Typography>
-            <Typography variant='body2' sx={{ fontWeight: 500, mt: 0.5 }}>
-              Pendiente: {patient.nextStep}
-            </Typography>
-          </Box>
-        }
-      />
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography variant='body1' sx={{ fontWeight: 600 }}>
+            {patient.name}
+          </Typography>
+          <Chip
+            label={`${patient.daysLate} días`}
+            size='small'
+            color={getRiskColor()}
+            sx={{ height: 20, fontSize: "0.75rem", fontWeight: 600 }}
+          />
+        </Box>
+        <Typography variant='body2' color='text.secondary'>
+          Último control:{" "}
+          {new Date(patient.lastAppointment).toLocaleDateString("es-ES")}
+        </Typography>
+        <Typography variant='body2' sx={{ fontWeight: 500 }}>
+          Pendiente: {patient.nextStep}
+        </Typography>
+      </Box>
       <IconButton size='small' sx={{ ml: 1 }}>
         <PhoneIcon fontSize='small' />
       </IconButton>

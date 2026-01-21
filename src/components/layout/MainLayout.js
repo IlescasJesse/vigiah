@@ -26,17 +26,16 @@ export default function MainLayout({ children }) {
         component='main'
         sx={{
           flexGrow: 1,
-          width: `calc(100% - ${DRAWER_WIDTH}px)`,
-          ml: `${DRAWER_WIDTH}px`,
+          minHeight: "100vh",
         }}
       >
         {/* Top Bar */}
         <TopBar />
         {/* Page Content */}
-        <Toolbar sx={{ minHeight: 70 }} /> {/* Spacer for AppBar */}
         <Box
           sx={{
             p: 3,
+            mt: "70px",
             minHeight: "calc(100vh - 70px)",
           }}
         >

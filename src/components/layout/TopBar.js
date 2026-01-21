@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   AppBar,
   Toolbar,
@@ -38,8 +38,18 @@ const breadcrumbNameMap = {
 
 export default function TopBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [notifAnchor, setNotifAnchor] = React.useState(null);
+  const [userData, setUserData] = React.useState(null);
+
+  React.useEffect(() => {
+    // Cargar datos del usuario desde localStorage
+    const user = localStorage.getItem("user");
+    if (user) {
+      setUserData(JSON.parse(user));
+    }
+  }, []);
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -47,6 +57,18 @@ export default function TopBar() {
 
   const handleProfileMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleLogout = async () => {
+    // Limpiar localStorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    // Eliminar cookie del servidor
+    await fetch("/api/auth/logout", { method: "POST" });
+
+    // Redirigir al login usando window.location para forzar recarga
+    window.location.href = "/login";
   };
 
   const handleNotificationsOpen = (event) => {
@@ -169,10 +191,10 @@ export default function TopBar() {
                 variant='body2'
                 sx={{ fontWeight: 600, color: "text.primary" }}
               >
-                Dr. Fernando Cardiólogo
+                {userData?.name || "Usuario"}
               </Typography>
               <Typography variant='caption' sx={{ color: "text.secondary" }}>
-                Médico Tratante
+                {userData?.role || "Sin rol"}
               </Typography>
             </Box>
             <Avatar
@@ -183,7 +205,7 @@ export default function TopBar() {
                 fontWeight: 600,
               }}
             >
-              FC
+              {userData?.name?.charAt(0) || "U"}
             </Avatar>
           </Box>
         </Box>
@@ -215,7 +237,7 @@ export default function TopBar() {
           Configuración
         </MenuItem>
         <Divider sx={{ my: 1 }} />
-        <MenuItem onClick={handleProfileMenuClose}>
+        <MenuItem onClick={handleLogout}>
           <LogoutIcon sx={{ mr: 1.5, color: "error.main" }} />
           <Typography color='error'>Cerrar Sesión</Typography>
         </MenuItem>
