@@ -1,0 +1,54 @@
+// This is your Prisma schema file for MySQL
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo de Usuario para MySQL
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(RESIDENTE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  MEDICO
+  RESIDENTE
+}
+
+// Catálogo de Diagnósticos
+model Diagnosis {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique
+  name        String
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("diagnoses")
+}
+
+// Catálogo de Medicamentos
+model Medication {
+  id          Int      @id @default(autoincrement())
+  name        String
+  activeIngredient String?
+  dosageForm  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("medications")
+}
