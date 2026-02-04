@@ -90,17 +90,17 @@ export default function LoginPage() {
 
         showNotification("¡Inicio de sesión exitoso!", "success");
 
-        // Redirigir al dashboard usando window.location para forzar recarga completa
+        // Pequeña pausa para que el usuario vea el mensaje
         setTimeout(() => {
-          window.location.href = "/dashboard";
-        }, 1000);
+          router.push("/dashboard");
+        }, 500);
       } else {
         showNotification(data.message || "Credenciales incorrectas", "error");
+        setLoading(false);
       }
     } catch (error) {
       console.error("Error de login:", error);
       showNotification("Error al conectar con el servidor", "error");
-    } finally {
       setLoading(false);
     }
   };

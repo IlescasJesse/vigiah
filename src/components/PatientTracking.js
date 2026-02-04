@@ -297,8 +297,78 @@ export default function PatientTracking({ patientId }) {
   const [activeStep, setActiveStep] = React.useState(0);
   const [formData, setFormData] = React.useState({});
   const [completedSteps, setCompletedSteps] = React.useState({});
+  const [patient, setPatient] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
 
-  const handleNext = () => {
+  // Cargar datos del paciente
+  React.useEffect(() => {
+    const fetchPatient = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/patients/${patientId}`);
+        if (!response.ok) {
+          throw new Error("Error al cargar paciente");
+        }
+        const result = await response.json();
+        const patientData = result.data;
+        setPatient(patientData);
+
+        // Determinar el paso activo basado en las visitas
+        const visitCount = patientData.visits?.length || 0;
+        setActiveStep(Math.min(visitCount, protocolSteps.length - 1));
+
+        // Cargar datos de la última visita en el formulario
+        if (visitCount > 0) {
+          const lastVisit = patientData.visits[visitCount - 1];
+          setFormData({
+            weight: lastVisit.weight || "",
+            systolicBP: lastVisit.systolicBP || "",
+            diastolicBP: lastVisit.diastolicBP || "",
+            ldl: lastVisit.ldl || "",
+            hba1c: lastVisit.hba1c || "",
+            lvef: lastVisit.lvef || "",
+            glucose: lastVisit.glucose || "",
+            wallMotion: lastVisit.wallMotion || "",
+            medications: lastVisit.medications?.map(m => m.name).join(", ") || "",
+            outcomes: lastVisit.outcomes || "",
+            baselineLVEF: patientData.baselineLVEF || "",
+          });
+
+          // Marcar pasos completados
+          const completed = {};
+          for (let i = 0; i < visitCount; i++) {
+            completed[i] = true;
+          }
+          setCompletedSteps(completed);
+        } else {
+          // Primera visita - cargar datos basales del paciente
+          setFormData({
+            baselineLVEF: patientData.baselineLVEF || "",
+            weight: "",
+            systolicBP: "",
+            diastolicBP: "",
+            ldl: patientData.baselineLDL || "",
+            hba1c: "",
+            lvef: patientData.baselineLVEF || "",
+            glucose: "",
+            wallMotion: "",
+            medications: "",
+            outcomes: "",
+          });
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (patientId) {
+      fetchPatient();
+    }
+  }, [patientId]);
+
+  const handleNext = async () => {
     // Validate critical fields
     const currentStep = protocolSteps[activeStep];
     const missingFields = currentStep.criticalFields.filter(
@@ -314,9 +384,59 @@ export default function PatientTracking({ patientId }) {
       return;
     }
 
-    // Mark step as completed
-    setCompletedSteps({ ...completedSteps, [activeStep]: true });
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    try {
+      // Guardar la visita en la base de datos
+      const visitData = {
+        visitNumber: activeStep,
+        visitDate: new Date(),
+        weight: parseFloat(formData.weight) || null,
+        systolicBP: parseFloat(formData.systolicBP) || null,
+        diastolicBP: parseFloat(formData.diastolicBP) || null,
+        ldl: parseFloat(formData.ldl) || null,
+        hba1c: parseFloat(formData.hba1c) || null,
+        lvef: parseFloat(formData.lvef) || null,
+        glucose: parseFloat(formData.glucose) || null,
+        wallMotion: formData.wallMotion || null,
+        outcomes: formData.outcomes || null,
+        medications: formData.medications
+          ? formData.medications.split(",").map((m) => ({ name: m.trim() }))
+          : [],
+      };
+
+      // Actualizar el paciente con la nueva visita
+      const response = await fetch(`/api/patients/${patientId}/visits`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(visitData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al guardar visita");
+      }
+
+      // Mark step as completed
+      setCompletedSteps({ ...completedSteps, [activeStep]: true });
+      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+
+      // Limpiar el formulario para la siguiente visita
+      setFormData({
+        weight: "",
+        systolicBP: "",
+        diastolicBP: "",
+        ldl: "",
+        hba1c: "",
+        lvef: "",
+        glucose: "",
+        wallMotion: "",
+        medications: "",
+        outcomes: "",
+      });
+    } catch (error) {
+      console.error("Error al guardar visita:", error);
+      alert("Error al guardar la visita. Por favor intente nuevamente.");
+    }
   };
 
   const handleBack = () => {
@@ -344,6 +464,28 @@ export default function PatientTracking({ patientId }) {
     return "divider";
   };
 
+  // Mostrar loading
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+        <Typography>Cargando datos del paciente...</Typography>
+      </Box>
+    );
+  }
+
+  if (!patient) {
+    return (
+      <Box sx={{ p: 4 }}>
+        <Alert severity="error">No se pudo cargar la información del paciente</Alert>
+      </Box>
+    );
+  }
+
+  const fullName = patient.fullName || `${patient.firstName} ${patient.lastName}`;
+  const age = patient.age || "N/A";
+  const currentMonth = activeStep;
+  const status = patient.status || "ACTIVO";
+
   return (
     <Box>
       {/* Patient Header */}
@@ -357,15 +499,24 @@ export default function PatientTracking({ patientId }) {
         >
           <Box>
             <Typography variant='h5' sx={{ fontWeight: 700, mb: 0.5 }}>
-              Juan Pérez García
+              {fullName}
             </Typography>
             <Typography variant='body2' color='text.secondary'>
-              ID: {patientId || "PAC-001"} • 58 años • Intervención: 15/09/2025
+              ID: {patient._id?.toString().slice(-8) || "N/A"} • {age} años
+              {patient.primaryDiagnosis && ` • ${patient.primaryDiagnosis}`}
             </Typography>
           </Box>
           <Box sx={{ display: "flex", gap: 1 }}>
-            <Chip label='Mes 5' color='primary' sx={{ fontWeight: 600 }} />
-            <Chip label='Activo' color='success' sx={{ fontWeight: 600 }} />
+            <Chip
+              label={`${protocolSteps[currentMonth]?.label || `Mes ${currentMonth}`}`}
+              color='primary'
+              sx={{ fontWeight: 600 }}
+            />
+            <Chip
+              label={status}
+              color={status === "ACTIVO" ? "success" : "default"}
+              sx={{ fontWeight: 600 }}
+            />
           </Box>
         </Box>
       </Paper>

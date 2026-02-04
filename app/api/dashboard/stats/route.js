@@ -2,13 +2,17 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Patient from "@/models/Patient";
 import { calculatePopulationStats } from "@/lib/riskCalculator";
+import { requireAuth } from "@/lib/auth";
 
 /**
  * GET /api/dashboard/stats
  * Obtiene las estadísticas del dashboard
  */
-export async function GET() {
+export async function GET(request) {
   try {
+    // Verificar autenticación
+    const user = requireAuth(request);
+    
     await connectDB();
 
     // Obtener pacientes activos

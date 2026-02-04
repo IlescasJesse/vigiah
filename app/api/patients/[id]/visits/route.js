@@ -32,6 +32,9 @@ export async function POST(request, { params }) {
       ldl: body.ldl,
       hba1c: body.hba1c,
       lvef: body.lvef,
+      glucose: body.glucose,
+      wallMotion: body.wallMotion,
+      outcomes: body.outcomes,
       notes: body.notes,
       medications: body.medications || [],
     };

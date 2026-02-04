@@ -37,6 +37,18 @@ const visitSchema = new mongoose.Schema(
       type: Number, // Fracción de eyección del ventrículo izquierdo en %
       required: false,
     },
+    glucose: {
+      type: Number, // Glucosa en mg/dL
+      required: false,
+    },
+    wallMotion: {
+      type: String, // Motilidad parietal
+      required: false,
+    },
+    outcomes: {
+      type: String, // Resultados/Notas
+      required: false,
+    },
     // Información adicional
     notes: {
       type: String,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Patient from "@/models/Patient";
+import { requireAuth } from "@/lib/auth";
 
 /**
  * GET /api/patients
@@ -8,6 +9,9 @@ import Patient from "@/models/Patient";
  */
 export async function GET(request) {
   try {
+    // Verificar autenticación
+    const user = requireAuth(request);
+    
     await connectDB();
 
     const { searchParams } = new URL(request.url);
@@ -24,6 +28,14 @@ export async function GET(request) {
     });
   } catch (error) {
     console.error("Error al obtener pacientes:", error);
+    
+    if (error.message === "No autorizado") {
+      return NextResponse.json(
+        { success: false, error: "No autorizado" },
+        { status: 401 }
+      );
+    }
+    
     return NextResponse.json(
       { success: false, error: "Error al obtener pacientes" },
       { status: 500 }
@@ -37,6 +49,9 @@ export async function GET(request) {
  */
 export async function POST(request) {
   try {
+    // Verificar autenticación
+    const user = requireAuth(request);
+    
     await connectDB();
 
     const body = await request.json();
@@ -52,6 +67,14 @@ export async function POST(request) {
     );
   } catch (error) {
     console.error("Error al crear paciente:", error);
+    
+    if (error.message === "No autorizado") {
+      return NextResponse.json(
+        { success: false, error: "No autorizado" },
+        { status: 401 }
+      );
+    }
+    
     return NextResponse.json(
       { success: false, error: "Error al crear paciente" },
       { status: 500 }

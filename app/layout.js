@@ -2,13 +2,15 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import ThemeRegistry from "../src/theme/ThemeRegistry";
 import ConditionalLayout from "../src/components/layout/ConditionalLayout";
+import { AuthProvider } from "../lib/AuthContext";
+import ProtectedRoute from "../components/ProtectedRoute";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "VIGIAH - Sistema de Vigilancia Médica",
+  title: "Clínica de Cardiometabolismo - Seguimiento post-ICP",
   description:
-    "Sistema de Vigilancia e Indicadores de Gestión en Intervención y Angioplastia-Hemodinámica",
+    "Clínica de Cardiometabolismo para seguimiento post-ICP (Intervención Coronaria Percutánea)",
 };
 
 export default function RootLayout({ children }) {
@@ -16,7 +18,11 @@ export default function RootLayout({ children }) {
     <html lang='es'>
       <body className={inter.className}>
         <ThemeRegistry>
-          <ConditionalLayout>{children}</ConditionalLayout>
+          <AuthProvider>
+            <ProtectedRoute>
+              <ConditionalLayout>{children}</ConditionalLayout>
+            </ProtectedRoute>
+          </AuthProvider>
         </ThemeRegistry>
       </body>
     </html>

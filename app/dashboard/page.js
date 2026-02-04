@@ -15,6 +15,8 @@ import {
   IconButton,
   Avatar,
   Divider,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import {
   TrendingUp as TrendingUpIcon,
@@ -25,6 +27,7 @@ import {
   Warning as WarningIcon,
   Phone as PhoneIcon,
   CheckCircle as CheckCircleIcon,
+  CalendarToday as CalendarIcon,
 } from "@mui/icons-material";
 import {
   AreaChart,
@@ -38,12 +41,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import {
-  kpiData,
-  metabolicControlTrend,
-  urgentPatients,
-  controlByParameter,
-} from "../../src/data/mockData";
+import { useRouter } from "next/navigation";
 
 /**
  * KPI Card Component
@@ -149,61 +147,94 @@ function KPICard({
 }
 
 /**
- * Urgent Patient Item Component
- */
-function UrgentPatientItem({ patient }) {
-  const getRiskColor = () => {
-    if (patient.riskLevel === "high") return "error";
-    if (patient.riskLevel === "medium") return "warning";
-    return "success";
-  };
-
-  return (
-    <ListItem
-      sx={{
-        border: "1px solid",
-        borderColor: "divider",
-        borderRadius: 2,
-        mb: 1,
-        "&:hover": {
-          bgcolor: "action.hover",
-        },
-      }}
-    >
-      <Avatar sx={{ bgcolor: `${getRiskColor()}.light`, mr: 2 }}>
-        <WarningIcon sx={{ color: `${getRiskColor()}.main` }} />
-      </Avatar>
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography variant='body1' sx={{ fontWeight: 600 }}>
-            {patient.name}
-          </Typography>
-          <Chip
-            label={`${patient.daysLate} días`}
-            size='small'
-            color={getRiskColor()}
-            sx={{ height: 20, fontSize: "0.75rem", fontWeight: 600 }}
-          />
-        </Box>
-        <Typography variant='body2' color='text.secondary'>
-          Último control:{" "}
-          {new Date(patient.lastAppointment).toLocaleDateString("es-ES")}
-        </Typography>
-        <Typography variant='body2' sx={{ fontWeight: 500 }}>
-          Pendiente: {patient.nextStep}
-        </Typography>
-      </Box>
-      <IconButton size='small' sx={{ ml: 1 }}>
-        <PhoneIcon fontSize='small' />
-      </IconButton>
-    </ListItem>
-  );
-}
-
-/**
  * Main Clinical Dashboard Component
  */
 export default function ClinicalDashboard() {
+  const router = useRouter();
+  const [stats, setStats] = React.useState(null);
+  const [patients, setPatients] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  // Cargar estadísticas del dashboard
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Obtener estadísticas
+      const statsResponse = await fetch("/api/dashboard/stats");
+      if (!statsResponse.ok) {
+        throw new Error("Error al cargar estadísticas");
+      }
+      const statsResult = await statsResponse.json();
+      setStats(statsResult.data);
+
+      // Obtener pacientes activos
+      const patientsResponse = await fetch("/api/patients?status=ACTIVO");
+      if (!patientsResponse.ok) {
+        throw new Error("Error al cargar pacientes");
+      }
+      const patientsResult = await patientsResponse.json();
+      setPatients(patientsResult.data || []);
+
+    } catch (err) {
+      console.error("Error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  // Calcular pacientes que requieren atención
+  const getUrgentPatients = () => {
+    const today = new Date();
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(today.getDate() - 2);
+
+    return patients
+      .filter((patient) => {
+        if (!patient.nextAppointment) return false;
+        const appointmentDate = new Date(patient.nextAppointment);
+        // Citas vencidas hace más de 2 días
+        return appointmentDate < twoDaysAgo;
+      })
+      .slice(0, 5); // Mostrar solo las 5 más urgentes
+  };
+
+  const urgentPatientsList = getUrgentPatients();
+
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">
+          Error al cargar el dashboard: {error}
+        </Alert>
+      </Box>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="info">
+          No hay datos disponibles para mostrar estadísticas.
+        </Alert>
+      </Box>
+    );
+  }
+
   return (
     <Box>
       {/* Page Header */}
@@ -212,7 +243,7 @@ export default function ClinicalDashboard() {
           Panel de Control Clínico
         </Typography>
         <Typography variant='body1' color='text.secondary'>
-          Sistema de Vigilancia Post-Intervención Coronaria Percutánea
+          Clínica de Cardiometabolismo - Seguimiento post-ICP
         </Typography>
       </Box>
 
@@ -221,137 +252,42 @@ export default function ClinicalDashboard() {
         <Grid item xs={12} sm={6} md={3}>
           <KPICard
             title='Pacientes Activos'
-            value={kpiData.activePatientsCount}
+            value={stats.activePatients || 0}
             icon={PeopleIcon}
             status='info'
-            trend='up'
-            trendValue='+8'
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <KPICard
             title='Control LDL Global'
-            value={kpiData.ldlControlPercentage}
+            value={stats.ldlControlPercentage ? stats.ldlControlPercentage.toFixed(1) : "0"}
             suffix='%'
             icon={BiotechIcon}
-            status={kpiData.ldlControlPercentage >= 70 ? "success" : "error"}
-            trend='down'
-            trendValue='-2.3%'
+            status={stats.ldlControlPercentage >= 70 ? "success" : stats.ldlControlPercentage >= 50 ? "warning" : "error"}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <KPICard
-            title='Ecos Realizados (Mes 5)'
-            value={kpiData.echosCompletedMonth5}
-            suffix='%'
-            icon={FavoriteIcon}
-            status={kpiData.echosCompletedMonth5 >= 80 ? "success" : "warning"}
-            trend='up'
-            trendValue='+4.1%'
+            title='Próximas Citas (7 días)'
+            value={stats.upcomingAppointments || 0}
+            icon={CalendarIcon}
+            status={stats.upcomingAppointments > 0 ? "info" : "success"}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <KPICard
             title='Citas Vencidas'
-            value={kpiData.missedAppointments}
+            value={urgentPatientsList.length}
             icon={WarningIcon}
-            status='error'
-            trend='down'
-            trendValue='-2'
+            status={urgentPatientsList.length > 0 ? "error" : "success"}
           />
         </Grid>
       </Grid>
 
       <Grid container spacing={3}>
-        {/* Main Chart - Metabolic Control Trend */}
+        {/* Control por Parámetro */}
         <Grid item xs={12} lg={8}>
           <Paper sx={{ p: 3, height: "100%" }}>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5 }}>
-                Tendencia de Control Metabólico
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Evolución mensual de pacientes en meta terapéutica
-              </Typography>
-            </Box>
-            <ResponsiveContainer width='100%' height={350}>
-              <AreaChart data={metabolicControlTrend}>
-                <defs>
-                  <linearGradient id='colorEnMeta' x1='0' y1='0' x2='0' y2='1'>
-                    <stop offset='5%' stopColor='#2E7D32' stopOpacity={0.8} />
-                    <stop offset='95%' stopColor='#2E7D32' stopOpacity={0.1} />
-                  </linearGradient>
-                  <linearGradient
-                    id='colorFueraMeta'
-                    x1='0'
-                    y1='0'
-                    x2='0'
-                    y2='1'
-                  >
-                    <stop offset='5%' stopColor='#D32F2F' stopOpacity={0.8} />
-                    <stop offset='95%' stopColor='#D32F2F' stopOpacity={0.1} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray='3 3' stroke='#E0E0E0' />
-                <XAxis
-                  dataKey='month'
-                  tick={{ fontSize: 12 }}
-                  stroke='#666666'
-                />
-                <YAxis tick={{ fontSize: 12 }} stroke='#666666' />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#FFFFFF",
-                    border: "1px solid #E0E0E0",
-                    borderRadius: 8,
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: 14, fontWeight: 600 }} />
-                <Area
-                  type='monotone'
-                  dataKey='enMeta'
-                  name='En Meta'
-                  stroke='#2E7D32'
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill='url(#colorEnMeta)'
-                />
-                <Area
-                  type='monotone'
-                  dataKey='fueraMeta'
-                  name='Fuera de Meta'
-                  stroke='#D32F2F'
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill='url(#colorFueraMeta)'
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </Paper>
-        </Grid>
-
-        {/* Urgent Action List */}
-        <Grid item xs={12} lg={4}>
-          <Paper sx={{ p: 3, height: "100%" }}>
-            <Box sx={{ mb: 2 }}>
-              <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5 }}>
-                Acciones Urgentes
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Pacientes con citas vencidas (&gt; 7 días)
-              </Typography>
-            </Box>
-            <List sx={{ maxHeight: 370, overflow: "auto" }}>
-              {urgentPatients.map((patient) => (
-                <UrgentPatientItem key={patient.id} patient={patient} />
-              ))}
-            </List>
-          </Paper>
-        </Grid>
-
-        {/* Control by Parameter Chart */}
-        <Grid item xs={12} lg={6}>
-          <Paper sx={{ p: 3 }}>
             <Box sx={{ mb: 3 }}>
               <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5 }}>
                 Control por Parámetro Clínico
@@ -360,109 +296,177 @@ export default function ClinicalDashboard() {
                 Distribución de pacientes según metas terapéuticas
               </Typography>
             </Box>
-            <ResponsiveContainer width='100%' height={300}>
-              <BarChart data={controlByParameter} layout='vertical'>
-                <CartesianGrid strokeDasharray='3 3' stroke='#E0E0E0' />
-                <XAxis type='number' tick={{ fontSize: 12 }} stroke='#666666' />
-                <YAxis
-                  dataKey='parameter'
-                  type='category'
-                  tick={{ fontSize: 12 }}
-                  stroke='#666666'
-                  width={100}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#FFFFFF",
-                    border: "1px solid #E0E0E0",
-                    borderRadius: 8,
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: 14, fontWeight: 600 }} />
-                <Bar
-                  dataKey='controlled'
-                  name='Controlados'
-                  fill='#2E7D32'
-                  radius={[0, 8, 8, 0]}
-                />
-                <Bar
-                  dataKey='uncontrolled'
-                  name='No Controlados'
-                  fill='#D32F2F'
-                  radius={[0, 8, 8, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            {stats.chartData && stats.chartData.length > 0 ? (
+              <ResponsiveContainer width='100%' height={350}>
+                <BarChart data={stats.chartData}>
+                  <CartesianGrid strokeDasharray='3 3' stroke='#E0E0E0' />
+                  <XAxis
+                    dataKey='name'
+                    tick={{ fontSize: 12 }}
+                    stroke='#666666'
+                  />
+                  <YAxis tick={{ fontSize: 12 }} stroke='#666666' />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#FFFFFF",
+                      border: "1px solid #E0E0E0",
+                      borderRadius: 8,
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 14, fontWeight: 600 }} />
+                  <Bar
+                    dataKey='En Meta'
+                    fill='#2E7D32'
+                    radius={[8, 8, 0, 0]}
+                  />
+                  <Bar
+                    dataKey='Fuera de Meta'
+                    fill='#D32F2F'
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: 350 }}>
+                <Typography variant="body2" color="text.secondary">
+                  No hay suficientes datos para mostrar gráficas
+                </Typography>
+              </Box>
+            )}
           </Paper>
         </Grid>
-
-        {/* Quick Stats Summary */}
-        <Grid item xs={12} lg={6}>
-          <Paper sx={{ p: 3 }}>
-            <Box sx={{ mb: 3 }}>
+        {/* Urgent Action List */}
+        <Grid item xs={12} lg={4}>
+          <Paper sx={{ p: 3, height: "100%" }}>
+            <Box sx={{ mb: 2 }}>
               <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5 }}>
-                Resumen de Indicadores
+                Acciones Urgentes
               </Typography>
               <Typography variant='body2' color='text.secondary'>
-                Estado actual del programa de seguimiento
+                Pacientes con citas vencidas
               </Typography>
             </Box>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {controlByParameter.map((param, index) => (
-                <Box key={index}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      mb: 1,
-                    }}
-                  >
-                    <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                      {param.parameter}
-                    </Typography>
-                    <Typography
-                      variant='body2'
+            {urgentPatientsList.length > 0 ? (
+              <List sx={{ maxHeight: 370, overflow: "auto" }}>
+                {urgentPatientsList.map((patient) => {
+                  const patientId = patient._id?.toString() || patient.id;
+                  const fullName = patient.fullName || `${patient.firstName} ${patient.lastName}`;
+                  const appointmentDate = new Date(patient.nextAppointment);
+                  const today = new Date();
+                  const daysLate = Math.floor((today - appointmentDate) / (1000 * 60 * 60 * 24));
+                  
+                  return (
+                    <ListItem
+                      key={patientId}
                       sx={{
-                        fontWeight: 700,
-                        color:
-                          param.percentage >= 70
-                            ? "success.main"
-                            : "error.main",
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: 2,
+                        mb: 1,
+                        cursor: "pointer",
+                        "&:hover": {
+                          bgcolor: "action.hover",
+                        },
                       }}
+                      onClick={() => router.push(`/pacientes/${patientId}`)}
                     >
-                      {param.percentage.toFixed(1)}%
-                    </Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      width: "100%",
-                      height: 8,
-                      bgcolor: "grey.200",
-                      borderRadius: 1,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: `${param.percentage}%`,
-                        height: "100%",
-                        bgcolor:
-                          param.percentage >= 70
-                            ? "success.main"
-                            : "error.main",
-                        transition: "width 0.3s ease",
-                      }}
-                    />
-                  </Box>
-                  {index < controlByParameter.length - 1 && (
-                    <Divider sx={{ mt: 2 }} />
-                  )}
-                </Box>
-              ))}
-            </Box>
+                      <Avatar sx={{ bgcolor: "error.light", mr: 2 }}>
+                        <WarningIcon sx={{ color: "error.main" }} />
+                      </Avatar>
+                      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <Typography variant='body1' sx={{ fontWeight: 600 }}>
+                            {fullName}
+                          </Typography>
+                          <Chip
+                            label={`${daysLate} días`}
+                            size='small'
+                            color="error"
+                            sx={{ height: 20, fontSize: "0.75rem", fontWeight: 600 }}
+                          />
+                        </Box>
+                        <Typography variant='body2' color='text.secondary'>
+                          Cita programada: {appointmentDate.toLocaleDateString("es-MX")}
+                        </Typography>
+                        <Typography variant='body2' sx={{ fontWeight: 500 }}>
+                          {patient.primaryDiagnosis || "Sin diagnóstico"}
+                        </Typography>
+                      </Box>
+                    </ListItem>
+                  );
+                })}
+              </List>
+            ) : (
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 370, gap: 2 }}>
+                <CheckCircleIcon sx={{ fontSize: 48, color: "success.main" }} />
+                <Typography variant='body2' color='text.secondary' textAlign="center">
+                  No hay pacientes con citas vencidas
+                </Typography>
+              </Box>
+            )}
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Resumen Estadístico */}
+      {stats.populationStats && (
+        <Grid container spacing={3} sx={{ mt: 1 }}>
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3 }}>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5 }}>
+                  Resumen Estadístico del Programa
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  Indicadores clave de control metabólico
+                </Typography>
+              </Box>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Box sx={{ textAlign: "center" }}>
+                    <Typography variant='h4' sx={{ fontWeight: 700, color: "primary.main" }}>
+                      {stats.populationStats.inTarget || 0}
+                    </Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      Pacientes en Meta Global
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Box sx={{ textAlign: "center" }}>
+                    <Typography variant='h4' sx={{ fontWeight: 700, color: (Number(stats.populationStats.ldlControlRate) || 0) >= 70 ? "success.main" : "error.main" }}>
+                      {Number(stats.populationStats.ldlControlRate || 0).toFixed(1)}%
+                    </Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      Control de LDL
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Box sx={{ textAlign: "center" }}>
+                    <Typography variant='h4' sx={{ fontWeight: 700, color: (Number(stats.populationStats.glycemicControlRate) || 0) >= 70 ? "success.main" : "error.main" }}>
+                      {Number(stats.populationStats.glycemicControlRate || 0).toFixed(1)}%
+                    </Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      Control Glicémico (Diabéticos)
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Box sx={{ textAlign: "center" }}>
+                    <Typography variant='h4' sx={{ fontWeight: 700, color: "info.main" }}>
+                      {patients.length}
+                    </Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      Total Pacientes en Seguimiento
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+        </Grid>
+      )}
     </Box>
   );
 }

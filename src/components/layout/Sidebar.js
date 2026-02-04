@@ -73,7 +73,7 @@ export default function Sidebar() {
         >
           <Image
             src='/img/isotipo.jpg'
-            alt='VIGIAH Isotipo'
+            alt='Clínica de Cardiometabolismo'
             fill
             style={{ objectFit: "contain" }}
             priority
@@ -145,7 +145,7 @@ export default function Sidebar() {
             textAlign: "center",
           }}
         >
-          VIGIAH v1.0.0
+          Clínica de Cardiometabolismo
         </Typography>
         <Typography
           variant='caption'
@@ -155,7 +155,7 @@ export default function Sidebar() {
             textAlign: "center",
           }}
         >
-          © 2026 Hospital Público
+          Seguimiento post-ICP v1.0.0
         </Typography>
       </Box>
     </Drawer>

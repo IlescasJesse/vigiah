@@ -17,6 +17,9 @@ import {
   InputAdornment,
   Button,
   Avatar,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -26,17 +29,62 @@ import {
   CheckCircle as CheckCircleIcon,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
-import { recentPatients } from "../../src/data/mockData";
+import NuevoPatienteDialog from "../../components/NuevoPatienteDialog";
 
 export default function PatientsListPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [patients, setPatients] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [snackbar, setSnackbar] = React.useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
-  const filteredPatients = recentPatients.filter(
-    (patient) =>
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Cargar pacientes desde la API
+  const fetchPatients = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/patients");
+      if (!response.ok) {
+        throw new Error("Error al cargar pacientes");
+      }
+      const result = await response.json();
+      setPatients(result.data || []);
+    } catch (error) {
+      console.error("Error:", error);
+      setSnackbar({
+        open: true,
+        message: "Error al cargar pacientes",
+        severity: "error",
+      });
+      setPatients([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar pacientes al montar el componente
+  React.useEffect(() => {
+    fetchPatients();
+  }, []);
+
+  const filteredPatients = patients.filter((patient) => {
+    const searchLower = searchTerm.toLowerCase();
+    const patientFirstName = patient.firstName?.toLowerCase() || "";
+    const patientLastName = patient.lastName?.toLowerCase() || "";
+    const fullName = `${patientFirstName} ${patientLastName}`.toLowerCase();
+    const patientId = patient._id?.toString().toLowerCase() || "";
+
+    return (
+      fullName.includes(searchLower) ||
+      patientFirstName.includes(searchLower) ||
+      patientLastName.includes(searchLower) ||
+      patientId.includes(searchLower)
+    );
+  });
 
   const getRiskColor = (risk) => {
     switch (risk) {
@@ -52,11 +100,69 @@ export default function PatientsListPage() {
   };
 
   const getStatusColor = (status) => {
-    return status === "Activo" ? "success" : "default";
+    switch (status) {
+      case "ACTIVO":
+      case "Activo":
+        return "success";
+      case "INACTIVO":
+      case "Inactivo":
+        return "default";
+      case "ALTA":
+      case "Alta":
+        return "info";
+      default:
+        return "default";
+    }
   };
 
   const handleViewPatient = (patientId) => {
     router.push(`/pacientes/${patientId}`);
+  };
+
+  const handleOpenDialog = () => {
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+  };
+
+  const handleSavePatient = async (patientData) => {
+    try {
+      const response = await fetch("/api/patients", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(patientData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al guardar el paciente");
+      }
+
+      const result = await response.json();
+      
+      setSnackbar({
+        open: true,
+        message: "Paciente registrado exitosamente",
+        severity: "success",
+      });
+
+      // Recargar la lista de pacientes
+      fetchPatients();
+    } catch (error) {
+      console.error("Error:", error);
+      setSnackbar({
+        open: true,
+        message: "Error al registrar el paciente. Intente nuevamente.",
+        severity: "error",
+      });
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
   return (
@@ -76,7 +182,7 @@ export default function PatientsListPage() {
         <Button
           variant='contained'
           startIcon={<PersonAddIcon />}
-          onClick={() => router.push("/pacientes/nuevo")}
+          onClick={handleOpenDialog}
         >
           Nuevo Paciente
         </Button>
@@ -100,119 +206,109 @@ export default function PatientsListPage() {
       </Paper>
 
       {/* Patients Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ bgcolor: "grey.50" }}>
-              <TableCell sx={{ fontWeight: 600 }}>Paciente</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Edad</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Intervención</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Mes Protocolo</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Riesgo</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Próxima Cita</TableCell>
-              <TableCell align='center' sx={{ fontWeight: 600 }}>
-                Acciones
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredPatients.map((patient) => (
-              <TableRow
-                key={patient.id}
-                hover
-                sx={{
-                  "&:hover": {
-                    bgcolor: "action.hover",
-                    cursor: "pointer",
-                  },
-                }}
-                onClick={() => handleViewPatient(patient.id)}
-              >
-                <TableCell>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                    <Avatar
-                      sx={{ bgcolor: "primary.main", width: 36, height: 36 }}
-                    >
-                      {patient.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .slice(0, 2)}
-                    </Avatar>
-                    <Box>
-                      <Typography variant='body1' sx={{ fontWeight: 600 }}>
-                        {patient.name}
-                      </Typography>
-                      <Typography variant='body2' color='text.secondary'>
-                        {patient.lastVisit}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Typography variant='body2' sx={{ fontFamily: "monospace" }}>
-                    {patient.id}
-                  </Typography>
-                </TableCell>
-                <TableCell>{patient.age} años</TableCell>
-                <TableCell>{patient.intervention}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={patient.currentMonth}
-                    size='small'
-                    color='primary'
-                    variant='outlined'
-                  />
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={patient.risk}
-                    size='small'
-                    color={getRiskColor(patient.risk)}
-                    icon={
-                      patient.risk === "Muy Alto" ? (
-                        <WarningIcon />
-                      ) : (
-                        <CheckCircleIcon />
-                      )
-                    }
-                  />
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={patient.status}
-                    size='small'
-                    color={getStatusColor(patient.status)}
-                    variant='filled'
-                  />
-                </TableCell>
-                <TableCell>
-                  <Typography variant='body2'>
-                    {patient.nextAppointment}
-                  </Typography>
-                </TableCell>
-                <TableCell align='center'>
-                  <IconButton
-                    color='primary'
-                    size='small'
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleViewPatient(patient.id);
-                    }}
-                  >
-                    <VisibilityIcon />
-                  </IconButton>
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ bgcolor: "grey.50" }}>
+                <TableCell sx={{ fontWeight: 600 }}>Paciente</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Edad</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Género</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Diagnóstico</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Próxima Cita</TableCell>
+                <TableCell align='center' sx={{ fontWeight: 600 }}>
+                  Acciones
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {filteredPatients.map((patient) => {
+                const patientId = patient._id?.toString() || patient.id;
+                const fullName = patient.fullName || `${patient.firstName} ${patient.lastName}`;
+                const initials = `${patient.firstName?.[0] || ""}${patient.lastName?.[0] || ""}`;
+                const lastVisit = patient.visits?.[patient.visits.length - 1];
+                const nextAppointment = patient.nextAppointment
+                  ? new Date(patient.nextAppointment).toLocaleDateString("es-MX")
+                  : "Sin cita";
+
+                return (
+                  <TableRow
+                    key={patientId}
+                    hover
+                    sx={{
+                      "&:hover": {
+                        bgcolor: "action.hover",
+                        cursor: "pointer",
+                      },
+                    }}
+                    onClick={() => handleViewPatient(patientId)}
+                  >
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        <Avatar
+                          sx={{ bgcolor: "primary.main", width: 36, height: 36 }}
+                        >
+                          {initials}
+                        </Avatar>
+                        <Box>
+                          <Typography variant='body1' sx={{ fontWeight: 600 }}>
+                            {fullName}
+                          </Typography>
+                          <Typography variant='body2' color='text.secondary'>
+                            {patient.email || patient.phone || "Sin contacto"}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      {patient.age || "N/A"} años
+                    </TableCell>
+                    <TableCell>{patient.gender || "N/A"}</TableCell>
+                    <TableCell>
+                      <Typography variant='body2' noWrap sx={{ maxWidth: 200 }}>
+                        {patient.primaryDiagnosis || "Sin diagnóstico"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={patient.status || "ACTIVO"}
+                        size='small'
+                        color={getStatusColor(patient.status || "ACTIVO")}
+                        variant='filled'
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant='body2'>
+                        {nextAppointment}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align='center'>
+                      <IconButton
+                        color='primary'
+                        size='small'
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewPatient(patientId);
+                        }}
+                      >
+                        <VisibilityIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       {/* Empty State */}
-      {filteredPatients.length === 0 && (
+      {!loading && filteredPatients.length === 0 && (
         <Box
           sx={{
             p: 4,
@@ -228,6 +324,29 @@ export default function PatientsListPage() {
           </Typography>
         </Box>
       )}
+
+      {/* Nuevo Paciente Dialog */}
+      <NuevoPatienteDialog
+        open={dialogOpen}
+        onClose={handleCloseDialog}
+        onSave={handleSavePatient}
+      />
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

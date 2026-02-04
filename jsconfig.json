@@ -3,11 +3,14 @@
     "baseUrl": ".",
     "ignoreDeprecations": "6.0",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
+      "@/*": ["./*"],
+      "@/components/*": ["./components/*"],
+      "@/src/components/*": ["./src/components/*"],
       "@/theme/*": ["./src/theme/*"],
       "@/data/*": ["./src/data/*"],
-      "@/app/*": ["./src/app/*"]
+      "@/app/*": ["./app/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/models/*": ["./models/*"]
     }
   },
   "exclude": ["node_modules", ".next"]
