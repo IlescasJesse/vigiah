@@ -17,9 +17,6 @@ import {
   InputAdornment,
   Button,
   Avatar,
-  Snackbar,
-  Alert,
-  CircularProgress,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -30,6 +27,8 @@ import {
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import NuevoPatienteDialog from "../../components/NuevoPatienteDialog";
+import TableSkeleton from "@/src/components/common/TableSkeleton";
+import useNotification from "@/src/hooks/useNotification";
 
 export default function PatientsListPage() {
   const router = useRouter();
@@ -37,11 +36,24 @@ export default function PatientsListPage() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [patients, setPatients] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
-  const [snackbar, setSnackbar] = React.useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
+
+  const { showSuccess, showError, NotificationComponent } = useNotification();
+
+  // Función para calcular edad desde fecha de nacimiento
+  const calculateAge = (dateOfBirth) => {
+    if (!dateOfBirth) return null;
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return age;
+  };
 
   // Cargar pacientes desde la API
   const fetchPatients = async () => {
@@ -55,11 +67,7 @@ export default function PatientsListPage() {
       setPatients(result.data || []);
     } catch (error) {
       console.error("Error:", error);
-      setSnackbar({
-        open: true,
-        message: "Error al cargar pacientes",
-        severity: "error",
-      });
+      showError("Error al cargar la lista de pacientes");
       setPatients([]);
     } finally {
       setLoading(false);
@@ -142,27 +150,15 @@ export default function PatientsListPage() {
       }
 
       const result = await response.json();
-      
-      setSnackbar({
-        open: true,
-        message: "Paciente registrado exitosamente",
-        severity: "success",
-      });
+
+      showSuccess("Paciente registrado exitosamente");
 
       // Recargar la lista de pacientes
       fetchPatients();
     } catch (error) {
-      console.error("Error:", error);
-      setSnackbar({
-        open: true,
-        message: "Error al registrar el paciente. Intente nuevamente.",
-        severity: "error",
-      });
+      console.error("Error creating patient:", error);
+      showError("Error al registrar el paciente. Intente nuevamente.");
     }
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
   };
 
   return (
@@ -207,9 +203,7 @@ export default function PatientsListPage() {
 
       {/* Patients Table */}
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-          <CircularProgress />
-        </Box>
+        <TableSkeleton rows={5} columns={7} />
       ) : (
         <TableContainer component={Paper}>
           <Table>
@@ -229,11 +223,15 @@ export default function PatientsListPage() {
             <TableBody>
               {filteredPatients.map((patient) => {
                 const patientId = patient._id?.toString() || patient.id;
-                const fullName = patient.fullName || `${patient.firstName} ${patient.lastName}`;
+                const fullName =
+                  patient.fullName ||
+                  `${patient.firstName} ${patient.lastName}`;
                 const initials = `${patient.firstName?.[0] || ""}${patient.lastName?.[0] || ""}`;
                 const lastVisit = patient.visits?.[patient.visits.length - 1];
                 const nextAppointment = patient.nextAppointment
-                  ? new Date(patient.nextAppointment).toLocaleDateString("es-MX")
+                  ? new Date(patient.nextAppointment).toLocaleDateString(
+                      "es-MX",
+                    )
                   : "Sin cita";
 
                 return (
@@ -249,9 +247,15 @@ export default function PatientsListPage() {
                     onClick={() => handleViewPatient(patientId)}
                   >
                     <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
+                      >
                         <Avatar
-                          sx={{ bgcolor: "primary.main", width: 36, height: 36 }}
+                          sx={{
+                            bgcolor: "primary.main",
+                            width: 36,
+                            height: 36,
+                          }}
                         >
                           {initials}
                         </Avatar>
@@ -266,7 +270,10 @@ export default function PatientsListPage() {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      {patient.age || "N/A"} años
+                      {patient.age ||
+                        calculateAge(patient.dateOfBirth) ||
+                        "N/A"}{" "}
+                      años
                     </TableCell>
                     <TableCell>{patient.gender || "N/A"}</TableCell>
                     <TableCell>
@@ -283,9 +290,7 @@ export default function PatientsListPage() {
                       />
                     </TableCell>
                     <TableCell>
-                      <Typography variant='body2'>
-                        {nextAppointment}
-                      </Typography>
+                      <Typography variant='body2'>{nextAppointment}</Typography>
                     </TableCell>
                     <TableCell align='center'>
                       <IconButton
@@ -332,21 +337,8 @@ export default function PatientsListPage() {
         onSave={handleSavePatient}
       />
 
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      {/* Notificaciones */}
+      {NotificationComponent}
     </Box>
   );
 }

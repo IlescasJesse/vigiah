@@ -36,10 +36,16 @@ const navigationItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <Drawer
       variant='permanent'
+      suppressHydrationWarning
       sx={{
         width: DRAWER_WIDTH,
         flexShrink: 0,
@@ -63,6 +69,7 @@ export default function Sidebar() {
           height: 70,
           px: 3,
         }}
+        suppressHydrationWarning
       >
         <Box
           sx={{
@@ -82,11 +89,12 @@ export default function Sidebar() {
       </Box>
 
       {/* Navigation */}
-      <Box sx={{ overflow: "auto", flex: 1, pt: 2 }}>
+      <Box sx={{ overflow: "auto", flex: 1, pt: 2 }} suppressHydrationWarning>
         <List sx={{ px: 2 }}>
           {navigationItems.map((item) => {
-            const isActive =
-              pathname === item.href || pathname?.startsWith(item.href + "/");
+            const isActive = mounted
+              ? pathname === item.href || pathname?.startsWith(item.href + "/")
+              : false;
 
             return (
               <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>

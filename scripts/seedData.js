@@ -43,6 +43,8 @@ const seedPatients = [
     baselineLVEF: 55,
     status: "ACTIVO",
     primaryDiagnosis: "Síndrome Coronario Agudo post-angioplastia",
+    interventionDate: new Date("2025-09-01"), // Hace 5 meses
+    nextAppointment: new Date("2026-02-15"),
     nextAppointment: new Date("2026-02-15"),
     visits: [
       {
@@ -98,6 +100,7 @@ const seedPatients = [
     dateOfBirth: new Date("1972-08-22"),
     gender: "FEMENINO",
     email: "maria.lopez@email.com",
+    interventionDate: new Date("2025-12-10"),
     phone: "555-0102",
     isDiabetic: false,
     baselineLDL: 165,
@@ -225,6 +228,7 @@ const seedPatients = [
     dateOfBirth: new Date("1968-07-18"),
     gender: "MASCULINO",
     email: "roberto.diaz@email.com",
+    interventionDate: new Date("2026-01-20"),
     phone: "555-0105",
     isDiabetic: true,
     baselineLDL: 175,
@@ -251,6 +255,26 @@ const seedPatients = [
     ],
   },
 ];
+
+// Agregar paciente de prueba recién dado de alta (hoy)
+const newPatient = {
+  firstName: "Jesse",
+  lastName: "Ilescas",
+  dateOfBirth: new Date("1996-01-01"),
+  gender: "MASCULINO",
+  email: "jesse.test@email.com",
+  phone: "555-0106",
+  isDiabetic: false,
+  baselineLDL: 150,
+  baselineLVEF: 60,
+  status: "ACTIVO",
+  primaryDiagnosis: "SÍNDROME CORONARIO AGUDO",
+  interventionDate: new Date(),
+  nextAppointment: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+  visits: [],
+};
+
+seedPatients.push(newPatient);
 
 const seedUsers = [
   {

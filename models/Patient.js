@@ -1,5 +1,42 @@
 import mongoose from "mongoose";
 
+// Sub-esquema para el Progreso del Protocolo
+const protocolStepSchema = new mongoose.Schema(
+  {
+    stepId: {
+      type: Number,
+      required: true, // 0=Basal, 1=Mes1, 2=Mes3, etc.
+    },
+    stepLabel: {
+      type: String,
+      required: true, // "Basal", "Mes 1", "Mes 3", etc.
+    },
+    completed: {
+      type: Boolean,
+      default: false,
+    },
+    completedAt: {
+      type: Date,
+      required: false,
+    },
+    completedBy: {
+      type: String, // Email o nombre del usuario que completó
+      required: false,
+    },
+    formData: {
+      type: mongoose.Schema.Types.Mixed, // Objeto flexible con todos los datos del formulario
+      required: false,
+    },
+    notes: {
+      type: String,
+      required: false,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
 // Sub-esquema para Visitas
 const visitSchema = new mongoose.Schema(
   {
@@ -77,7 +114,7 @@ const visitSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Esquema principal de Paciente
@@ -126,6 +163,27 @@ const patientSchema = new mongoose.Schema(
       type: Number,
       required: false,
     },
+    interventionDate: {
+      type: Date,
+      required: false,
+    },
+
+    // Progreso del Protocolo (array de pasos completados)
+    protocolSteps: [protocolStepSchema],
+
+    // Estado de desbloqueo del protocolo (solo admin)
+    protocolUnlocked: {
+      type: Boolean,
+      default: false,
+    },
+    unlockedBy: {
+      type: String,
+      required: false,
+    },
+    unlockedAt: {
+      type: Date,
+      required: false,
+    },
 
     // Historial de visitas (array de sub-documentos)
     visits: [visitSchema],
@@ -157,7 +215,7 @@ const patientSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Métodos virtuales
@@ -198,6 +256,44 @@ patientSchema.methods.getCurrentValues = function () {
     currentLVEF: lastVisit.lvef,
     visitNumber: lastVisit.visitNumber,
   };
+};
+
+// Método para obtener el progreso del protocolo
+patientSchema.methods.getProtocolProgress = function () {
+  if (!this.protocolSteps || this.protocolSteps.length === 0) {
+    return { completed: 0, total: 7, steps: [] };
+  }
+
+  const completedSteps = this.protocolSteps.filter((step) => step.completed);
+
+  return {
+    completed: completedSteps.length,
+    total: 7, // 7 pasos en el protocolo
+    steps: this.protocolSteps.sort((a, b) => a.stepId - b.stepId),
+    lastCompletedStep:
+      completedSteps.length > 0
+        ? completedSteps[completedSteps.length - 1]
+        : null,
+  };
+};
+
+// Método para verificar si un paso está completado
+patientSchema.methods.isStepCompleted = function (stepId) {
+  if (!this.protocolSteps || this.protocolSteps.length === 0) {
+    return false;
+  }
+
+  const step = this.protocolSteps.find((s) => s.stepId === stepId);
+  return step ? step.completed : false;
+};
+
+// Método para obtener datos de un paso específico
+patientSchema.methods.getStepData = function (stepId) {
+  if (!this.protocolSteps || this.protocolSteps.length === 0) {
+    return null;
+  }
+
+  return this.protocolSteps.find((s) => s.stepId === stepId) || null;
 };
 
 // Índices para mejorar búsquedas

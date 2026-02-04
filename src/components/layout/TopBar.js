@@ -44,10 +44,12 @@ export default function TopBar() {
   const [userData, setUserData] = React.useState(null);
 
   React.useEffect(() => {
-    // Cargar datos del usuario desde localStorage
-    const user = localStorage.getItem("user");
-    if (user) {
-      setUserData(JSON.parse(user));
+    // Cargar datos del usuario desde localStorage solo en el cliente
+    if (typeof window !== "undefined") {
+      const user = localStorage.getItem("user");
+      if (user) {
+        setUserData(JSON.parse(user));
+      }
     }
   }, []);
 
@@ -190,10 +192,15 @@ export default function TopBar() {
               <Typography
                 variant='body2'
                 sx={{ fontWeight: 600, color: "text.primary" }}
+                suppressHydrationWarning
               >
                 {userData?.name || "Usuario"}
               </Typography>
-              <Typography variant='caption' sx={{ color: "text.secondary" }}>
+              <Typography
+                variant='caption'
+                sx={{ color: "text.secondary" }}
+                suppressHydrationWarning
+              >
                 {userData?.role || "Sin rol"}
               </Typography>
             </Box>
@@ -204,6 +211,7 @@ export default function TopBar() {
                 height: 40,
                 fontWeight: 600,
               }}
+              suppressHydrationWarning
             >
               {userData?.name?.charAt(0) || "U"}
             </Avatar>
