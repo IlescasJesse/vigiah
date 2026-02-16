@@ -1,4 +1,4 @@
-# 🚀 VIGIAH - Guía de Inicio Rápido
+# 🚀 Clínica Cardiometabolismo - Guía de Inicio Rápido
 
 ## Prerrequisitos
 
@@ -232,4 +232,4 @@ ISC
 
 ---
 
-**VIGIAH** - Sistema de Vigilancia e Indicadores de Gestión en Intervención y Angioplastia-Hemodinámica © 2026
+**Clínica Cardiometabolismo** - Sistema de Vigilancia e Indicadores de Gestión en Intervención y Angioplastia-Hemodinámica © 2026

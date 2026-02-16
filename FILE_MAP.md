@@ -1,4 +1,4 @@
-# 🗺️ Mapa Visual del Sistema VIGIAH
+# 🗺️ Mapa Visual del Sistema Clínica Cardiometabolismo
 
 ## 📍 Ubicación de Archivos por Funcionalidad
 

@@ -1,4 +1,4 @@
-# Documentación Técnica - VIGIAH
+# Documentación Técnica - Clínica Cardiometabolismo
 
 ## 📑 Índice de Ubicación de Archivos
 

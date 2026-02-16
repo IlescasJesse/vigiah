@@ -3,7 +3,7 @@
 import { createTheme } from "@mui/material/styles";
 
 /**
- * VIGIAH Medical Theme
+ * Clínica Cardiometabolismo Theme
  * Color palette optimized for clinical environments
  * Based on healthcare industry standards for trust and readability
  */

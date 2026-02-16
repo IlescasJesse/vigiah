@@ -1,4 +1,4 @@
-# VIGIAH - Sistema de Vigilancia Médica
+# Clínica Cardiometabolismo - Sistema de Vigilancia Médica
 
 **Sistema de Vigilancia e Indicadores de Gestión en Intervención y Angioplastia-Hemodinámica**
 
@@ -375,4 +375,4 @@ ISC
 
 **Desarrollado como Arquitecto de Software Senior**  
 Stack MERN + Next.js 14 (App Router)  
-© 2026 VIGIAH
+© 2026 Clínica Cardiometabolismo

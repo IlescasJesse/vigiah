@@ -52,10 +52,10 @@ const getNextAppointmentDate = () => {
   const today = new Date();
   const futureDate = new Date(today);
   futureDate.setDate(today.getDate() + 30);
-  
+
   // Ajustar si cae en fin de semana
   const dayOfWeek = futureDate.getDay(); // 0 = Domingo, 6 = Sábado
-  
+
   if (dayOfWeek === 0) {
     // Si es domingo, mover al lunes
     futureDate.setDate(futureDate.getDate() + 1);
@@ -63,7 +63,7 @@ const getNextAppointmentDate = () => {
     // Si es sábado, mover al lunes
     futureDate.setDate(futureDate.getDate() + 2);
   }
-  
+
   return futureDate;
 };
 
@@ -78,20 +78,21 @@ export default function NuevoPatienteDialog({ open, onClose, onSave }) {
     email: "",
     phone: "",
     primaryDiagnosis: "",
-    
+
     // Datos Clínicos Basales
     isDiabetic: false,
     weight: "",
     systolicBP: "",
     diastolicBP: "",
-    
+
     // Estudios y Resultados
     baselineLDL: "",
     ldl: "",
+    glucose: "",
     hba1c: "",
     baselineLVEF: "",
     lvef: "",
-    
+
     // Información Adicional
     medications: "",
     generalNotes: "",
@@ -142,14 +143,15 @@ export default function NuevoPatienteDialog({ open, onClose, onSave }) {
             systolicBP: formData.systolicBP ? parseFloat(formData.systolicBP) : null,
             diastolicBP: formData.diastolicBP ? parseFloat(formData.diastolicBP) : null,
             ldl: formData.ldl ? parseFloat(formData.ldl) : null,
+            glucose: formData.glucose ? parseFloat(formData.glucose) : null,
             hba1c: formData.hba1c ? parseFloat(formData.hba1c) : null,
             lvef: formData.lvef ? parseFloat(formData.lvef) : null,
             notes: `INGRESO HOSPITALARIO - ${formData.generalNotes ? formData.generalNotes.toUpperCase() : ""}`,
             medications: formData.medications
               ? formData.medications.split(",").map((med) => ({
-                  name: med.trim().toUpperCase(),
-                  dosage: "",
-                }))
+                name: med.trim().toUpperCase(),
+                dosage: "",
+              }))
               : [],
           },
         ],
@@ -174,6 +176,7 @@ export default function NuevoPatienteDialog({ open, onClose, onSave }) {
         diastolicBP: "",
         baselineLDL: "",
         ldl: "",
+        glucose: "",
         hba1c: "",
         baselineLVEF: "",
         lvef: "",
@@ -272,7 +275,7 @@ export default function NuevoPatienteDialog({ open, onClose, onSave }) {
                     label="Teléfono"
                     value={formData.phone}
                     onChange={handleChange("phone")}
-                    inputProps={{ 
+                    inputProps={{
                       pattern: "[0-9]*",
                       maxLength: 15
                     }}
@@ -296,7 +299,7 @@ export default function NuevoPatienteDialog({ open, onClose, onSave }) {
                     label="Peso (kg)"
                     value={formData.weight}
                     onChange={handleChange("weight")}
-                    inputProps={{ 
+                    inputProps={{
                       step: "0.1",
                       min: "0",
                       max: "300"
@@ -312,7 +315,7 @@ export default function NuevoPatienteDialog({ open, onClose, onSave }) {
                     label="Presión Sistólica (mmHg)"
                     value={formData.systolicBP}
                     onChange={handleChange("systolicBP")}
-                    inputProps={{ 
+                    inputProps={{
                       min: "50",
                       max: "300"
                     }}
@@ -327,7 +330,7 @@ export default function NuevoPatienteDialog({ open, onClose, onSave }) {
                     label="Presión Diastólica (mmHg)"
                     value={formData.diastolicBP}
                     onChange={handleChange("diastolicBP")}
-                    inputProps={{ 
+                    inputProps={{
                       min: "30",
                       max: "200"
                     }}
@@ -382,7 +385,7 @@ export default function NuevoPatienteDialog({ open, onClose, onSave }) {
                     label="LDL Basal (mg/dL)"
                     value={formData.baselineLDL}
                     onChange={handleChange("baselineLDL")}
-                    inputProps={{ 
+                    inputProps={{
                       step: "0.1",
                       min: "0",
                       max: "500"
@@ -398,7 +401,7 @@ export default function NuevoPatienteDialog({ open, onClose, onSave }) {
                     label="LDL Actual (mg/dL)"
                     value={formData.ldl}
                     onChange={handleChange("ldl")}
-                    inputProps={{ 
+                    inputProps={{
                       step: "0.1",
                       min: "0",
                       max: "500"
@@ -409,15 +412,30 @@ export default function NuevoPatienteDialog({ open, onClose, onSave }) {
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
+                    type="number"
+                    label="Glucosa (mg/dL)"
+                    value={formData.glucose}
+                    onChange={handleChange("glucose")}
+                    inputProps={{
+                      step: "1",
+                      min: "0",
+                      max: "600"
+                    }}
+                    helperText="Glucemia en ayunas (Rango: 0-600 mg/dL)"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
                     required
                     type="number"
                     label="HbA1c (%)"
                     value={formData.hba1c}
                     onChange={handleChange("hba1c")}
-                    inputProps={{ 
-                      step: "0.1", 
-                      min: "0", 
-                      max: "20" 
+                    inputProps={{
+                      step: "0.1",
+                      min: "0",
+                      max: "20"
                     }}
                     helperText="Hemoglobina glicosilada (Rango: 0-20%)"
                   />
@@ -438,10 +456,10 @@ export default function NuevoPatienteDialog({ open, onClose, onSave }) {
                     label="LVEF Basal (%) - Opcional"
                     value={formData.baselineLVEF}
                     onChange={handleChange("baselineLVEF")}
-                    inputProps={{ 
-                      step: "1", 
-                      min: "0", 
-                      max: "100" 
+                    inputProps={{
+                      step: "1",
+                      min: "0",
+                      max: "100"
                     }}
                     helperText="Fracción de eyección ventricular izquierda basal"
                   />
@@ -453,10 +471,10 @@ export default function NuevoPatienteDialog({ open, onClose, onSave }) {
                     label="LVEF Actual (%) - Opcional"
                     value={formData.lvef}
                     onChange={handleChange("lvef")}
-                    inputProps={{ 
-                      step: "1", 
-                      min: "0", 
-                      max: "100" 
+                    inputProps={{
+                      step: "1",
+                      min: "0",
+                      max: "100"
                     }}
                     helperText="Fracción de eyección ventricular izquierda actual"
                   />
@@ -538,71 +556,71 @@ export default function NuevoPatienteDialog({ open, onClose, onSave }) {
           },
         }}
       >
-      <DialogTitle>
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            Nuevo Paciente
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Clínica de Cardiometabolismo para seguimiento post-ICP
-          </Typography>
-        </Box>
-      </DialogTitle>
+        <DialogTitle>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+              Nuevo Paciente
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Clínica de Cardiometabolismo para seguimiento post-ICP
+            </Typography>
+          </Box>
+        </DialogTitle>
 
-      <DialogContent>
-        <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 2 }}>
-          {steps.map((step, index) => (
-            <Step key={step.label}>
-              <StepLabel>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {step.label}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {step.description}
-                </Typography>
-              </StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+        <DialogContent>
+          <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 2 }}>
+            {steps.map((step, index) => (
+              <Step key={step.label}>
+                <StepLabel>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {step.label}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {step.description}
+                  </Typography>
+                </StepLabel>
+              </Step>
+            ))}
+          </Stepper>
 
-        <Box sx={{ mt: 2, mb: 2 }}>{renderStepContent(activeStep)}</Box>
-      </DialogContent>
+          <Box sx={{ mt: 2, mb: 2 }}>{renderStepContent(activeStep)}</Box>
+        </DialogContent>
 
-      <Divider />
+        <Divider />
 
-      <DialogActions sx={{ p: 2, justifyContent: "space-between" }}>
-        <Button onClick={handleClose} color="inherit">
-          Cancelar
-        </Button>
-        <Box>
-          <Button
-            disabled={activeStep === 0}
-            onClick={handleBack}
-            sx={{ mr: 1 }}
-            startIcon={<ArrowBackIcon />}
-          >
-            Anterior
+        <DialogActions sx={{ p: 2, justifyContent: "space-between" }}>
+          <Button onClick={handleClose} color="inherit">
+            Cancelar
           </Button>
-          {activeStep === steps.length - 1 ? (
+          <Box>
             <Button
-              variant="contained"
-              onClick={handleSubmit}
-              startIcon={<SaveIcon />}
+              disabled={activeStep === 0}
+              onClick={handleBack}
+              sx={{ mr: 1 }}
+              startIcon={<ArrowBackIcon />}
             >
-              Guardar Paciente
+              Anterior
             </Button>
-          ) : (
-            <Button
-              variant="contained"
-              onClick={handleNext}
-              endIcon={<ArrowForwardIcon />}
-            >
-              Siguiente
-            </Button>
-          )}
-        </Box>
-      </DialogActions>
-    </Dialog>
+            {activeStep === steps.length - 1 ? (
+              <Button
+                variant="contained"
+                onClick={handleSubmit}
+                startIcon={<SaveIcon />}
+              >
+                Guardar Paciente
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                onClick={handleNext}
+                endIcon={<ArrowForwardIcon />}
+              >
+                Siguiente
+              </Button>
+            )}
+          </Box>
+        </DialogActions>
+      </Dialog>
     </LocalizationProvider>
   );
 }

@@ -1,4 +1,4 @@
-# VIGIAH - UI Architecture Documentation
+# Clínica Cardiometabolismo - UI Architecture Documentation
 
 ## Design System
 
@@ -336,4 +336,4 @@ For questions or issues with the UI architecture, refer to:
 
 ---
 
-**VIGIAH © 2026** - Sistema de Vigilancia e Indicadores de Gestión en Intervención y Angioplastia-Hemodinámica
+**Clínica Cardiometabolismo © 2026** - Sistema de Vigilancia e Indicadores de Gestión en Intervención y Angioplastia-Hemodinámica

@@ -1,4 +1,4 @@
-# 📖 Índice de Documentación - VIGIAH
+# 📖 Índice de Documentación - Clínica Cardiometabolismo
 
 ## 🎯 Comienza Aquí
 
@@ -47,7 +47,7 @@ Si es tu **primera vez** con el proyecto, lee los documentos en este orden:
 
 | Tema             | Documento                                | Sección               |
 | ---------------- | ---------------------------------------- | --------------------- |
-| ¿Qué es VIGIAH?  | [README.md](README.md)                   | Introducción          |
+| ¿Qué es el sistema?  | [README.md](README.md)                   | Introducción          |
 | ¿Cómo funciona?  | [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) | Arquitectura          |
 | Reglas clínicas  | [README.md](README.md)                   | Lógica de Negocio     |
 | Modelos de datos | [TECHNICAL_DOCS.md](TECHNICAL_DOCS.md)   | Arquitectura de Datos |
@@ -266,7 +266,7 @@ npm start                  # Iniciar en producción
 
 ## 🎯 Objetivos del Sistema
 
-VIGIAH es un sistema médico para:
+Clínica Cardiometabolismo es un sistema médico para:
 
 ✅ Seguimiento de pacientes cardiovasculares  
 ✅ Evaluación automática de riesgo clínico  
@@ -287,7 +287,7 @@ VIGIAH es un sistema médico para:
 
 ---
 
-## 🎊 ¡Bienvenido a VIGIAH!
+## 🎊 ¡Bienvenido a Clínica Cardiometabolismo!
 
 Este índice te ayudará a navegar toda la documentación del proyecto.
 
@@ -299,5 +299,5 @@ Este índice te ayudará a navegar toda la documentación del proyecto.
 
 ---
 
-_Sistema VIGIAH - Vigilancia e Indicadores de Gestión en Intervención y Angioplastia-Hemodinámica_  
+_Sistema Clínica Cardiometabolismo - Vigilancia e Indicadores de Gestión en Intervención y Angioplastia-Hemodinámica_  
 _© 2026 - Desarrollado con ❤️ como Arquitecto de Software Senior_

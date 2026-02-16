@@ -1,5 +1,5 @@
 /**
- * Mock Data for VIGIAH Dashboard
+ * Mock Data for Clínica Cardiometabolismo Dashboard
  * Clinical data simulation for immediate visual testing
  */
 

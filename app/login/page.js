@@ -164,10 +164,10 @@ export default function LoginPage() {
                 mb: 1,
               }}
             >
-              VIGIAH
+              Clínica Cardiometabolismo
             </Typography>
             <Typography variant='body2' color='text.secondary' align='center'>
-              Sistema de Vigilancia e Indicadores de Gestión
+              Seguimiento Post-ICP
             </Typography>
           </Box>
 

@@ -1,8 +1,8 @@
-# 🎉 VIGIAH - Proyecto Completado
+# 🎉 Clínica Cardiometabolismo - Proyecto Completado
 
 ## ✅ Estructura del Proyecto Creada
 
-El sistema médico VIGIAH ha sido creado exitosamente con la siguiente estructura:
+El sistema médico Clínica Cardiometabolismo ha sido creado exitosamente con la siguiente estructura:
 
 ```
 VIGIAH/
@@ -441,8 +441,8 @@ Consulta la documentación:
 
 ---
 
-**🎊 ¡Proyecto VIGIAH Completado con Éxito! 🎊**
+**🎊 ¡Proyecto Clínica Cardiometabolismo Completado con Éxito! 🎊**
 
 _Desarrollado como Arquitecto de Software Senior_  
 _Stack: MERN + Next.js 14 (App Router) + Material UI v5_  
-_© 2026 VIGIAH_
+_© 2026 Clínica Cardiometabolismo_

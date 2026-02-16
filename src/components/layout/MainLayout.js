@@ -6,7 +6,7 @@ import Sidebar, { DRAWER_WIDTH } from "./Sidebar";
 import TopBar from "./TopBar";
 
 /**
- * Main Layout Component for VIGIAH
+ * Main Layout Component for Clínica Cardiometabolismo
  * Implements persistent sidebar and top bar navigation
  */
 export default function MainLayout({ children }) {

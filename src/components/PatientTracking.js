@@ -59,7 +59,16 @@ const protocolSteps = [
         type: "number",
       },
       { name: "ldl", label: "LDL", unit: "mg/dL", type: "number" },
+      { name: "glucose", label: "Glucosa", unit: "mg/dL", type: "number" },
+      { name: "hba1c", label: "HbA1c", unit: "%", type: "number" },
       { name: "baselineLVEF", label: "FEVI Basal", unit: "%", type: "number" },
+      { name: "lvef", label: "FEVI Actual", unit: "%", type: "number" },
+      {
+        name: "medications",
+        label: "Medicamentos",
+        type: "text",
+        multiline: true,
+      },
     ],
   },
   {
@@ -83,6 +92,7 @@ const protocolSteps = [
         type: "number",
       },
       { name: "ldl", label: "LDL", unit: "mg/dL", type: "number" },
+      { name: "glucose", label: "Glucosa", unit: "mg/dL", type: "number" },
       {
         name: "medications",
         label: "Medicamentos",
@@ -167,6 +177,7 @@ const protocolSteps = [
         type: "number",
       },
       { name: "ldl", label: "LDL", unit: "mg/dL", type: "number" },
+      { name: "glucose", label: "Glucosa", unit: "mg/dL", type: "number" },
       {
         name: "lvef",
         label: "FEVI",
@@ -215,6 +226,7 @@ const protocolSteps = [
         type: "number",
       },
       { name: "ldl", label: "LDL", unit: "mg/dL", type: "number" },
+      { name: "glucose", label: "Glucosa", unit: "mg/dL", type: "number" },
     ],
   },
   {
@@ -238,6 +250,7 @@ const protocolSteps = [
         type: "number",
       },
       { name: "ldl", label: "LDL", unit: "mg/dL", type: "number" },
+      { name: "glucose", label: "Glucosa", unit: "mg/dL", type: "number" },
     ],
   },
   {
@@ -268,6 +281,7 @@ const protocolSteps = [
         type: "number",
       },
       { name: "ldl", label: "LDL", unit: "mg/dL", type: "number" },
+      { name: "glucose", label: "Glucosa", unit: "mg/dL", type: "number" },
       { name: "hba1c", label: "HbA1c", unit: "%", type: "number" },
       { name: "lvef", label: "FEVI Final", unit: "%", type: "number" },
       {
@@ -490,20 +504,47 @@ export default function PatientTracking({ patientId }) {
           if (currentStepData?.formData) {
             setFormData(currentStepData.formData);
           } else {
-            // Cargar datos basales del paciente
-            setFormData({
-              baselineLVEF: patientData.baselineLVEF || "",
-              weight: "",
-              systolicBP: "",
-              diastolicBP: "",
-              ldl: patientData.baselineLDL || "",
-              hba1c: "",
-              lvef: patientData.baselineLVEF || "",
-              glucose: "",
-              wallMotion: "",
-              medications: "",
-              outcomes: "",
-            });
+            // Si es el paso Basal (0), cargar datos de la primera visita del paciente
+            if (nextStep === 0 && patientData.visits && patientData.visits.length > 0) {
+              const firstVisit = patientData.visits.find(v => v.visitNumber === 1) || patientData.visits[0];
+
+              // Extraer medicamentos como string separado por comas
+              let medicationsString = "";
+              if (firstVisit.medications && Array.isArray(firstVisit.medications)) {
+                medicationsString = firstVisit.medications
+                  .map(med => med.name || med)
+                  .join(", ");
+              }
+
+              setFormData({
+                weight: firstVisit.weight || "",
+                systolicBP: firstVisit.systolicBP || "",
+                diastolicBP: firstVisit.diastolicBP || "",
+                ldl: firstVisit.ldl || patientData.baselineLDL || "",
+                hba1c: firstVisit.hba1c || "",
+                lvef: firstVisit.lvef || patientData.baselineLVEF || "",
+                baselineLVEF: patientData.baselineLVEF || "",
+                glucose: firstVisit.glucose || "",
+                wallMotion: firstVisit.wallMotion || "",
+                medications: medicationsString,
+                outcomes: "",
+              });
+            } else {
+              // Para otros pasos, cargar datos basales vacíos
+              setFormData({
+                baselineLVEF: patientData.baselineLVEF || "",
+                weight: "",
+                systolicBP: "",
+                diastolicBP: "",
+                ldl: patientData.baselineLDL || "",
+                hba1c: "",
+                lvef: patientData.baselineLVEF || "",
+                glucose: "",
+                wallMotion: "",
+                medications: "",
+                outcomes: "",
+              });
+            }
           }
         }
       } catch (error) {
@@ -575,18 +616,46 @@ export default function PatientTracking({ patientId }) {
         if (stepData?.formData) {
           setFormData(stepData.formData);
         } else {
-          setFormData({
-            weight: "",
-            systolicBP: "",
-            diastolicBP: "",
-            ldl: "",
-            hba1c: "",
-            lvef: "",
-            glucose: "",
-            wallMotion: "",
-            medications: "",
-            outcomes: "",
-          });
+          // Si es el paso Basal (0), cargar datos de la primera visita del paciente
+          if (stepIndex === 0 && patient && patient.visits && patient.visits.length > 0) {
+            const firstVisit = patient.visits.find(v => v.visitNumber === 1) || patient.visits[0];
+
+            // Extraer medicamentos como string separado por comas
+            let medicationsString = "";
+            if (firstVisit.medications && Array.isArray(firstVisit.medications)) {
+              medicationsString = firstVisit.medications
+                .map(med => med.name || med)
+                .join(", ");
+            }
+
+            setFormData({
+              weight: firstVisit.weight || "",
+              systolicBP: firstVisit.systolicBP || "",
+              diastolicBP: firstVisit.diastolicBP || "",
+              ldl: firstVisit.ldl || patient.baselineLDL || "",
+              hba1c: firstVisit.hba1c || "",
+              lvef: firstVisit.lvef || patient.baselineLVEF || "",
+              baselineLVEF: patient.baselineLVEF || "",
+              glucose: firstVisit.glucose || "",
+              wallMotion: firstVisit.wallMotion || "",
+              medications: medicationsString,
+              outcomes: "",
+            });
+          } else {
+            // Para otros pasos, inicializar con valores vacíos
+            setFormData({
+              weight: "",
+              systolicBP: "",
+              diastolicBP: "",
+              ldl: "",
+              hba1c: "",
+              lvef: "",
+              glucose: "",
+              wallMotion: "",
+              medications: "",
+              outcomes: "",
+            });
+          }
         }
       }
     } catch (error) {
@@ -630,19 +699,46 @@ export default function PatientTracking({ patientId }) {
           if (stepData?.formData) {
             setFormData(stepData.formData);
           } else {
-            // Limpiar formulario para nuevo paso
-            setFormData({
-              weight: "",
-              systolicBP: "",
-              diastolicBP: "",
-              ldl: "",
-              hba1c: "",
-              lvef: "",
-              glucose: "",
-              wallMotion: "",
-              medications: "",
-              outcomes: "",
-            });
+            // Si es el paso Basal (0), cargar datos de la primera visita
+            if (nextStep === 0 && patient && patient.visits && patient.visits.length > 0) {
+              const firstVisit = patient.visits.find(v => v.visitNumber === 1) || patient.visits[0];
+
+              // Extraer medicamentos como string separado por comas
+              let medicationsString = "";
+              if (firstVisit.medications && Array.isArray(firstVisit.medications)) {
+                medicationsString = firstVisit.medications
+                  .map(med => med.name || med)
+                  .join(", ");
+              }
+
+              setFormData({
+                weight: firstVisit.weight || "",
+                systolicBP: firstVisit.systolicBP || "",
+                diastolicBP: firstVisit.diastolicBP || "",
+                ldl: firstVisit.ldl || patient.baselineLDL || "",
+                hba1c: firstVisit.hba1c || "",
+                lvef: firstVisit.lvef || patient.baselineLVEF || "",
+                baselineLVEF: patient.baselineLVEF || "",
+                glucose: firstVisit.glucose || "",
+                wallMotion: firstVisit.wallMotion || "",
+                medications: medicationsString,
+                outcomes: "",
+              });
+            } else {
+              // Limpiar formulario para nuevo paso
+              setFormData({
+                weight: "",
+                systolicBP: "",
+                diastolicBP: "",
+                ldl: "",
+                hba1c: "",
+                lvef: "",
+                glucose: "",
+                wallMotion: "",
+                medications: "",
+                outcomes: "",
+              });
+            }
           }
         }
       } catch (error) {
@@ -905,8 +1001,8 @@ export default function PatientTracking({ patientId }) {
                 if (isLocked && !protocolUnlocked) {
                   const interventionDate = patient?.interventionDate
                     ? new Date(patient.interventionDate).toLocaleDateString(
-                        "es-MX",
-                      )
+                      "es-MX",
+                    )
                     : "N/A";
                   tooltipMessage = `🔒 Bloqueado - Disponible en Mes ${step.month}\nFecha de intervención: ${interventionDate}`;
                 } else if (!canClick) {
@@ -1158,24 +1254,24 @@ export default function PatientTracking({ patientId }) {
                               InputProps={
                                 field.unit
                                   ? {
-                                      endAdornment: (
-                                        <InputAdornment position='end'>
-                                          <Typography
-                                            variant='body2'
-                                            sx={{
-                                              color: field.highlight
-                                                ? "secondary.main"
-                                                : "text.secondary",
-                                              fontWeight: field.highlight
-                                                ? 600
-                                                : 400,
-                                            }}
-                                          >
-                                            {field.unit}
-                                          </Typography>
-                                        </InputAdornment>
-                                      ),
-                                    }
+                                    endAdornment: (
+                                      <InputAdornment position='end'>
+                                        <Typography
+                                          variant='body2'
+                                          sx={{
+                                            color: field.highlight
+                                              ? "secondary.main"
+                                              : "text.secondary",
+                                            fontWeight: field.highlight
+                                              ? 600
+                                              : 400,
+                                          }}
+                                        >
+                                          {field.unit}
+                                        </Typography>
+                                      </InputAdornment>
+                                    ),
+                                  }
                                   : undefined
                               }
                               sx={{
@@ -1218,10 +1314,10 @@ export default function PatientTracking({ patientId }) {
                                   MozAppearance: "textfield",
                                 },
                                 "& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button":
-                                  {
-                                    WebkitAppearance: "none",
-                                    margin: 0,
-                                  },
+                                {
+                                  WebkitAppearance: "none",
+                                  margin: 0,
+                                },
                               }}
                             />
                           )}

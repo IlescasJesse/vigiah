@@ -1,4 +1,4 @@
-# VIGIAH - Quick Start Guide
+# Clínica Cardiometabolismo - Quick Start Guide
 
 ## Arquitectura UI Completada
 

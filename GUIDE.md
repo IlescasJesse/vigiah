@@ -1,4 +1,4 @@
-# Guía de Inicio Rápido - VIGIAH
+# Guía de Inicio Rápido - Clínica Cardiometabolismo
 
 Esta guía te llevará paso a paso desde la instalación hasta tener el sistema completamente funcional.
 
